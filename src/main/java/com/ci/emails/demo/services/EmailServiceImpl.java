@@ -33,6 +33,20 @@ public class EmailServiceImpl implements EmailService{
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper;
         Multipart multipart = new MimeMultipart();
+        String sender;
+
+        switch (emailDetails.getSender()){
+            case "aedc":
+                sender = "noreply@aedc.com";
+                break;
+            case "bedc":
+                sender = "noreply@bedc.com";
+                break;
+            case "ekedp":
+                sender = "noreply@ekedp.com";
+                break;
+            default: sender= "noreply@cicod.com";
+        }
 
         try{
             mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
