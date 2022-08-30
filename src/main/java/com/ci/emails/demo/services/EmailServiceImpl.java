@@ -3,7 +3,6 @@ package com.ci.emails.demo.services;
 import com.ci.emails.demo.models.EmailDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -32,7 +31,8 @@ public class EmailServiceImpl implements EmailService{
     @Autowired
     private Environment environment;
 
-    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+    @Autowired
+    private JavaMailSenderImpl mailSender ;
 
     private String sender;
 
@@ -47,44 +47,45 @@ public class EmailServiceImpl implements EmailService{
         MimeMessageHelper mimeMessageHelper;
         Multipart multipart = new MimeMultipart();
 
+
+        Properties props = new Properties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.debug", "true");
+
+        Session session = Session.getDefaultInstance(props,
+                new javax.mail.Authenticator(){
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(
+                                mailSender.getUsername(), mailSender.getPassword());
+                    }
+                });
+
         mailSender.setHost("smtp.gmail.com");
         mailSender.setPort(587);
+        mailSender.setJavaMailProperties(props);
+        mailSender.setSession(session);
 
 
         switch (emailDetails.getSender()){
             case "aedc":
                 mailSender.setUsername("deolaoladeji@gmail.com");
                 mailSender.setPassword("cpdypwuuxhnopvmk");
-//                sender = environment.getProperty("aedc.mail.username");
                 break;
             case "bedc":
                 mailSender.setUsername("deedeji20@gmail.com");
-                mailSender.setPassword("password");
-//                sender = environment.getProperty("bedc.mail.username");
+                mailSender.setPassword("yqhxduxwchsstxcp");
                 break;
             case "ekedp":
                 mailSender.setUsername("admin@gmail.com");
                 mailSender.setPassword("password");
-//                sender = environment.getProperty("ekedp.mail.username");
                 break;
             default:
-                mailSender.setUsername("noreply@cicod.com");
-                mailSender.setPassword("password");
-//                sender= environment.getProperty("cicod.email.sender.user");
+                mailSender.setUsername("deolaoladeji@gmail.com");
+                mailSender.setPassword("default");
         }
-//        Properties props = new Properties();
-//        props.put("mail.transport.protocol", "smtp");
-//        props.put("mail.smtp.auth", "true");
-//        props.put("mail.smtp.starttls.enable", "true");
-//        props.put("mail.debug", "true");
-//
-//        Session session = Session.getDefaultInstance(props,
-//                new javax.mail.Authenticator(){
-//                    protected PasswordAuthentication getPasswordAuthentication() {
-//                        return new PasswordAuthentication(
-//                                mailSender.getUsername(), mailSender.getPassword());
-//                    }
-//                });
+
 
         try{
             mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
@@ -106,7 +107,6 @@ public class EmailServiceImpl implements EmailService{
                 multipart.addBodyPart(messageBodyPart);
                 mimeMessage.setContent(multipart);
             }
-
 
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
