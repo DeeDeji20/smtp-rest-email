@@ -1,5 +1,6 @@
 package com.ci.emails.demo.controller;
 
+import com.ci.emails.demo.models.EmailDetail2;
 import com.ci.emails.demo.models.EmailDetails;
 import com.ci.emails.demo.services.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,5 +16,10 @@ public class EmailController {
     @PostMapping("/send")
     public String sendMessage(@RequestBody EmailDetails emailDetails){
         return emailService.send(emailDetails);
+    }
+
+    @PostMapping("/sendWithCCs")
+    public String sendWithCCs(@RequestBody EmailDetail2 emailDetails){
+        return emailService.sendEmail(emailDetails);
     }
 }
