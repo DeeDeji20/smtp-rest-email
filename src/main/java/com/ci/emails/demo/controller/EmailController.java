@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class EmailController {
     @Autowired
-    EmailService emailService;
+    private EmailService emailService;
 
     @PostMapping("/send")
     public String sendMessage(@RequestBody EmailDetails emailDetails){
