@@ -29,7 +29,7 @@ public class EmailController {
                     .isSuccessful(false)
                     .response(exception.getMessage())
                     .statusCode(404)
-                    .build()
+                    .build();
             return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
         }
     }
