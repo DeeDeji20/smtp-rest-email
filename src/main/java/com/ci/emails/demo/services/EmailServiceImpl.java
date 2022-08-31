@@ -34,8 +34,6 @@ public class EmailServiceImpl implements EmailService{
     @Autowired
     private JavaMailSenderImpl mailSender ;
 
-    private String sender;
-
 
     public EmailServiceImpl(JavaMailSender javaMailSender) {
         this.javaMailSender = javaMailSender;
@@ -43,24 +41,12 @@ public class EmailServiceImpl implements EmailService{
 
     public String send(EmailDetails emailDetails) {
 
+        Properties props = configureMailingProperties();
+        Session session = getSession(props);
+
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper;
         Multipart multipart = new MimeMultipart();
-
-
-        Properties props = new Properties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.debug", "true");
-
-        Session session = Session.getDefaultInstance(props,
-                new javax.mail.Authenticator(){
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(
-                                mailSender.getUsername(), mailSender.getPassword());
-                    }
-                });
 
         mailSender.setHost("smtp.gmail.com");
         mailSender.setPort(587);
@@ -113,6 +99,25 @@ public class EmailServiceImpl implements EmailService{
             throw new RuntimeException(e);
         }
         return "Sent";
+    }
+
+    private static Properties configureMailingProperties() {
+        Properties props = new Properties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.debug", "true");
+        return props;
+    }
+
+    private Session getSession(Properties props) {
+        return Session.getDefaultInstance(props,
+                new javax.mail.Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(
+                                mailSender.getUsername(), mailSender.getPassword());
+                    }
+                });
     }
 
 }
