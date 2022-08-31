@@ -40,38 +40,15 @@ public class EmailServiceImpl implements EmailService{
     }
 
     public String send(EmailDetails emailDetails) {
-
         Properties props = configureMailingProperties();
         Session session = getSession(props);
+        configureHost(props, session);
+
+        getSenderDetails(emailDetails);
 
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper;
         Multipart multipart = new MimeMultipart();
-
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
-        mailSender.setJavaMailProperties(props);
-        mailSender.setSession(session);
-
-
-        switch (emailDetails.getSender()){
-            case "aedc":
-                mailSender.setUsername("deolaoladeji@gmail.com");
-                mailSender.setPassword("cpdypwuuxhnopvmk");
-                break;
-            case "bedc":
-                mailSender.setUsername("deedeji20@gmail.com");
-                mailSender.setPassword("yqhxduxwchsstxcp");
-                break;
-            case "ekedp":
-                mailSender.setUsername("admin@gmail.com");
-                mailSender.setPassword("password");
-                break;
-            default:
-                mailSender.setUsername("deolaoladeji@gmail.com");
-                mailSender.setPassword("default");
-        }
-
 
         try{
             mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
@@ -99,6 +76,33 @@ public class EmailServiceImpl implements EmailService{
             throw new RuntimeException(e);
         }
         return "Sent";
+    }
+
+    private void getSenderDetails(EmailDetails emailDetails) {
+        switch (emailDetails.getSender()){
+            case "aedc":
+                mailSender.setUsername("deolaoladeji@gmail.com");
+                mailSender.setPassword("cpdypwuuxhnopvmk");
+                break;
+            case "bedc":
+                mailSender.setUsername("deedeji20@gmail.com");
+                mailSender.setPassword("yqhxduxwchsstxcp");
+                break;
+            case "ekedp":
+                mailSender.setUsername("admin@gmail.com");
+                mailSender.setPassword("password");
+                break;
+            default:
+                mailSender.setUsername("deolaoladeji@gmail.com");
+                mailSender.setPassword("default");
+        }
+    }
+
+    private void configureHost(Properties props, Session session) {
+        mailSender.setHost("smtp.gmail.com");
+        mailSender.setPort(587);
+        mailSender.setJavaMailProperties(props);
+        mailSender.setSession(session);
     }
 
     private static Properties configureMailingProperties() {
