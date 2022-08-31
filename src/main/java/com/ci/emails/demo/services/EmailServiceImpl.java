@@ -27,13 +27,9 @@ import java.util.Properties;
 public class EmailServiceImpl implements EmailService{
     @Autowired
     private final JavaMailSender javaMailSender;
-
-    @Autowired
-    private Environment environment;
-
     @Autowired
     private JavaMailSenderImpl mailSender ;
-
+    private final Multipart multipart = new MimeMultipart();
 
     public EmailServiceImpl(JavaMailSender javaMailSender) {
         this.javaMailSender = javaMailSender;
@@ -43,39 +39,46 @@ public class EmailServiceImpl implements EmailService{
         Properties props = configureMailingProperties();
         Session session = getSession(props);
         configureHost(props, session);
-
         getSenderDetails(emailDetails);
 
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper;
-        Multipart multipart = new MimeMultipart();
-
         try{
-            mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
-            mimeMessageHelper.setFrom(emailDetails.getSender());
-            mimeMessageHelper.setTo(emailDetails.getRecipient());
-            mimeMessageHelper.setText(emailDetails.getBody());
-            mimeMessageHelper.setSubject(emailDetails.getSubject());
-//            Add CC
-            boolean hasCC = emailDetails.getCopy() == null;
-            if(!hasCC){
-                mimeMessageHelper.addCc(emailDetails.getCopy());
-            }
-//            Add attachment
-            if(emailDetails.getAttachment() != null){
-                MimeBodyPart messageBodyPart = new MimeBodyPart();
-                DataSource source = new FileDataSource(emailDetails.getAttachment());
-                messageBodyPart.setDataHandler(new DataHandler(source));
-                messageBodyPart.setFileName(new DataHandler(source).getName());
-                multipart.addBodyPart(messageBodyPart);
-                mimeMessage.setContent(multipart);
-            }
-
+            mimeMessageHelper = setMessageDetails(emailDetails, mimeMessage);
+            if(hasCC(emailDetails)) mimeMessageHelper.addCc(emailDetails.getCopy());
+            if(hasAttachment(emailDetails)) addAttachment(emailDetails, mimeMessage, multipart);
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
         return "Sent";
+    }
+
+    private MimeMessageHelper setMessageDetails(EmailDetails emailDetails, MimeMessage mimeMessage) throws MessagingException {
+        MimeMessageHelper mimeMessageHelper;
+        mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+        mimeMessageHelper.setFrom(emailDetails.getSender());
+        mimeMessageHelper.setTo(emailDetails.getRecipient());
+        mimeMessageHelper.setText(emailDetails.getBody());
+        mimeMessageHelper.setSubject(emailDetails.getSubject());
+        return mimeMessageHelper;
+    }
+
+    private boolean hasAttachment(EmailDetails emailDetails) {
+        return emailDetails.getAttachment() != null;
+    }
+
+    private boolean hasCC(EmailDetails emailDetails) {
+        return emailDetails.getCopy() != null;
+    }
+
+    private void addAttachment(EmailDetails emailDetails, MimeMessage mimeMessage, Multipart multipart) throws MessagingException {
+        MimeBodyPart messageBodyPart = new MimeBodyPart();
+        DataSource source = new FileDataSource(emailDetails.getAttachment());
+        messageBodyPart.setDataHandler(new DataHandler(source));
+        messageBodyPart.setFileName(new DataHandler(source).getName());
+        multipart.addBodyPart(messageBodyPart);
+        mimeMessage.setContent(multipart);
     }
 
     private void getSenderDetails(EmailDetails emailDetails) {
@@ -105,7 +108,7 @@ public class EmailServiceImpl implements EmailService{
         mailSender.setSession(session);
     }
 
-    private static Properties configureMailingProperties() {
+    private Properties configureMailingProperties() {
         Properties props = new Properties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
@@ -116,12 +119,12 @@ public class EmailServiceImpl implements EmailService{
 
     private Session getSession(Properties props) {
         return Session.getDefaultInstance(props,
-                new javax.mail.Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(
-                                mailSender.getUsername(), mailSender.getPassword());
-                    }
-                });
+            new javax.mail.Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(
+                            mailSender.getUsername(), mailSender.getPassword());
+                }
+            });
     }
 
 }
