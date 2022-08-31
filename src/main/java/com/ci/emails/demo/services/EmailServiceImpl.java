@@ -1,6 +1,5 @@
 package com.ci.emails.demo.services;
 
-import com.ci.emails.demo.models.EmailDetail2;
 import com.ci.emails.demo.models.EmailDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +44,7 @@ public class EmailServiceImpl implements EmailService{
         MimeMessageHelper mimeMessageHelper;
         try{
             mimeMessageHelper = setMessageDetails(emailDetails, mimeMessage);
-            if(!emailDetails.getCopy().isEmpty()){
+            if(hasCC(emailDetails)){
                 emailDetails.getCopy().forEach(cc->{
                     try {
                         mimeMessageHelper.addCc(cc);
@@ -60,62 +59,6 @@ public class EmailServiceImpl implements EmailService{
             throw new RuntimeException(e);
         }
         return "Message Sent Successfully";
-    }
-
-//    Just playing around
-    public String sendEmail(EmailDetail2 emailDetails2) {
-        Properties props = configureMailingProperties();
-        Session session = getSession(props);
-        configureHost(props, session);
-        switch (emailDetails2.getSender()){
-            case "aedc":
-                mailSender.setUsername("deolaoladeji@gmail.com");
-                mailSender.setPassword("cpdypwuuxhnopvmk");
-                break;
-            case "bedc":
-                mailSender.setUsername("deedeji20@gmail.com");
-                mailSender.setPassword("yqhxduxwchsstxcp");
-                break;
-            case "ekedp":
-                mailSender.setUsername("admin@gmail.com");
-                mailSender.setPassword("password");
-                break;
-            default:
-                mailSender.setUsername("deolaoladeji@gmail.com");
-                mailSender.setPassword("default");
-        }
-
-        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-        MimeMessageHelper mimeMessageHelper;
-        try{
-//            mimeMessageHelper = MimeMessageHelper mimeMessageHelper;
-            mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
-            mimeMessageHelper.setFrom(emailDetails2.getSender());
-            mimeMessageHelper.setTo(emailDetails2.getRecipient());
-            mimeMessageHelper.setText(emailDetails2.getBody());
-            mimeMessageHelper.setSubject(emailDetails2.getSubject());
-            if(!emailDetails2.getCcs().isEmpty()){
-                emailDetails2.getCcs().forEach(cc->{
-                    try {
-                        mimeMessageHelper.addCc(cc);
-                    } catch (MessagingException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            if(emailDetails2.getAttachment() != null){
-                MimeBodyPart messageBodyPart = new MimeBodyPart();
-                DataSource source = new FileDataSource(emailDetails2.getAttachment());
-                messageBodyPart.setDataHandler(new DataHandler(source));
-                messageBodyPart.setFileName(new DataHandler(source).getName());
-                multipart.addBodyPart(messageBodyPart);
-                mimeMessage.setContent(multipart);
-            }
-            javaMailSender.send(mimeMessage);
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
-        }
-        return "Message Sent to all CCs";
     }
 
     private MimeMessageHelper setMessageDetails(EmailDetails emailDetails, MimeMessage mimeMessage) throws MessagingException {
