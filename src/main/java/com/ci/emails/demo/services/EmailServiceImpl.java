@@ -3,6 +3,7 @@ package com.ci.emails.demo.services;
 import com.ci.emails.demo.models.EmailDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -18,6 +19,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import java.util.Date;
 import java.util.Properties;
 
 
@@ -28,6 +30,9 @@ public class EmailServiceImpl implements EmailService{
     private final JavaMailSender javaMailSender;
     @Autowired
     private JavaMailSenderImpl mailSender ;
+
+    @Autowired
+    private Environment env;
     private final Multipart multipart = new MimeMultipart();
 
     public EmailServiceImpl(JavaMailSender javaMailSender) {
@@ -35,9 +40,6 @@ public class EmailServiceImpl implements EmailService{
     }
 
     public String send(EmailDetails emailDetails) {
-        Properties props = configureMailingProperties();
-        Session session = getSession(props);
-        configureHost(props, session);
         getSenderDetails(emailDetails);
 
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
@@ -58,6 +60,7 @@ public class EmailServiceImpl implements EmailService{
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
+        log.info(">>>>>Message sent successfully");
         return "Message Sent Successfully";
     }
 
@@ -89,49 +92,23 @@ public class EmailServiceImpl implements EmailService{
     }
 
     private void getSenderDetails(EmailDetails emailDetails) {
-        switch (emailDetails.getSender()){
+        switch (emailDetails.getSender().toLowerCase()){
             case "aedc":
-                mailSender.setUsername("deolaoladeji@gmail.com");
-                mailSender.setPassword("cpdypwuuxhnopvmk");
+                mailSender.setUsername(env.getProperty("aedc.mail.username"));
+                mailSender.setPassword(env.getProperty("aedc.mail.password"));
                 break;
             case "bedc":
-                mailSender.setUsername("deedeji20@gmail.com");
-                mailSender.setPassword("yqhxduxwchsstxcp");
+                mailSender.setUsername(env.getProperty("bedc.mail.username"));
+                mailSender.setPassword(env.getProperty("bedc.mail.password"));
                 break;
             case "ekedp":
-                mailSender.setUsername("admin@gmail.com");
+                mailSender.setUsername("noreply@ekedp.com");
                 mailSender.setPassword("password");
                 break;
             default:
-                mailSender.setUsername("deolaoladeji@gmail.com");
+                mailSender.setUsername("noreply@cicod.com");
                 mailSender.setPassword("default");
         }
-    }
-
-    private void configureHost(Properties props, Session session) {
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
-        mailSender.setJavaMailProperties(props);
-        mailSender.setSession(session);
-    }
-
-    private Properties configureMailingProperties() {
-        Properties props = new Properties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.debug", "true");
-        return props;
-    }
-
-    private Session getSession(Properties props) {
-        return Session.getDefaultInstance(props,
-            new javax.mail.Authenticator() {
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(
-                            mailSender.getUsername(), mailSender.getPassword());
-                }
-            });
     }
 
 }
