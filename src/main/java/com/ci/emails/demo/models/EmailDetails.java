@@ -1,13 +1,13 @@
 package com.ci.emails.demo.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmailDetails {
@@ -15,6 +15,6 @@ public class EmailDetails {
     private String recipient;
     private String subject;
     private String body;
-    private String attachment;
+    private File attachment;
     private Set<String> copy = new HashSet<>();
 }
