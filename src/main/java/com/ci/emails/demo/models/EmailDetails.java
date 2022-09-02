@@ -10,7 +10,9 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@RequiredArgsConstructor
 public class EmailDetails {
+    @NonNull
     private String sender;
     private String recipient;
     private String subject;

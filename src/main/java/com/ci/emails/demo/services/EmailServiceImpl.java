@@ -8,7 +8,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
@@ -27,6 +26,7 @@ public class EmailServiceImpl implements EmailService{
     @Autowired
     private JavaMailSenderImpl mailSender ;
 
+
     @Autowired
     private Environment env;
     private final Multipart multipart = new MimeMultipart();
@@ -34,6 +34,7 @@ public class EmailServiceImpl implements EmailService{
     public EmailServiceImpl(JavaMailSender javaMailSender) {
         this.javaMailSender = javaMailSender;
     }
+
 
     public String send(EmailDetails emailDetails) {
         getSenderDetails(emailDetails);
@@ -88,23 +89,20 @@ public class EmailServiceImpl implements EmailService{
     }
 
     private void getSenderDetails(EmailDetails emailDetails) {
-        switch (emailDetails.getSender().toLowerCase()){
-            case "aedc":
-                mailSender.setUsername(env.getProperty("aedc.mail.username"));
-                mailSender.setPassword(env.getProperty("aedc.mail.password"));
-                break;
-            case "bedc":
-                mailSender.setUsername(env.getProperty("bedc.mail.username"));
-                mailSender.setPassword(env.getProperty("bedc.mail.password"));
-                break;
-            case "ekedp":
-                mailSender.setUsername("noreply@ekedp.com");
-                mailSender.setPassword("password");
-                break;
-            default:
-                mailSender.setUsername("noreply@cicod.com");
-                mailSender.setPassword("default");
+        String sender = emailDetails.getSender();
+        String username;
+        String password;
+        if (sender.equals("aedc")||sender.equals("bedc")||sender.equals("ekedp")) {
+             username = env.getProperty(sender+"."+"mail.username");
+             password = env.getProperty(sender+"."+"mail.password");
+        }else{
+             username = env.getProperty("default.mail.username");
+             password = env.getProperty("default.mail.password");
         }
+
+        mailSender.setUsername(username);
+        mailSender.setPassword(password);
+
     }
 
 }
