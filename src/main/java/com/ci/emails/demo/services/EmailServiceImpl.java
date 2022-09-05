@@ -105,34 +105,4 @@ public class EmailServiceImpl implements EmailService{
         mailSender.setPassword(password);
 
     }
-
-    //        switch (emailDetails.getSender().toLowerCase()){
-//            case "aedc":
-//                mailSender.setUsername(env.getProperty("aedc.mail.username"));
-//                mailSender.setPassword(env.getProperty("aedc.mail.password"));
-//                break;
-//            case "bedc":
-//                mailSender.setUsername(env.getProperty("bedc.mail.username"));
-//                mailSender.setPassword(env.getProperty("bedc.mail.password"));
-//                break;
-//            case "ekedp":
-//                mailSender.setUsername("noreply@ekedp.com");
-//                mailSender.setPassword("password");
-//                break;
-//            default:
-//                mailSender.setUsername("noreply@cicod.com");
-//                mailSender.setPassword("default");
-//        }
-
-//    try (var inputStream = mpf.getInputStream()) {
-//            InputStreamReader reader = new InputStreamReader(inputStream);
-//            BufferedReader br = new BufferedReader(reader);
-//            String line = br.readLine();
-//            PrintWriter writer = new PrintWriter(new FileWriter(mpf.getOriginalFilename()));
-//            writer.println(line);
-//            writer.close();
-//        } catch (IOException exception) {
-//            exception.printStackTrace();
-//        }
-
 }
