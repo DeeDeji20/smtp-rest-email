@@ -8,14 +8,14 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import java.io.*;
+import java.util.Objects;
 
 
 @Service
@@ -38,7 +38,6 @@ public class EmailServiceImpl implements EmailService{
 
     public String send(EmailDetails emailDetails) {
         getSenderDetails(emailDetails);
-
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper;
         try{
@@ -52,13 +51,13 @@ public class EmailServiceImpl implements EmailService{
                     }
                 });
             }
-            if(hasAttachment(emailDetails)) addAttachment(emailDetails, mimeMessage, multipart);
-            javaMailSender.send(mimeMessage);
+            if(hasAttachment(emailDetails.getAttachment())) addAttachment(mimeMessageHelper, emailDetails);
+            javaMailSender.send(mimeMessageHelper.getMimeMessage());
+            log.info(">>>>>Message sent successfully");
+            return "Message Sent Successfully";
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
-        log.info(">>>>>Message sent successfully");
-        return "Message Sent Successfully";
     }
 
     private MimeMessageHelper setMessageDetails(EmailDetails emailDetails, MimeMessage mimeMessage) throws MessagingException {
@@ -71,21 +70,23 @@ public class EmailServiceImpl implements EmailService{
         return mimeMessageHelper;
     }
 
-    private boolean hasAttachment(EmailDetails emailDetails) {
-        return emailDetails.getAttachment() != null;
+    private boolean hasAttachment(MultipartFile multipartFile) {
+        return multipartFile != null;
     }
 
     private boolean hasCC(EmailDetails emailDetails) {
         return !emailDetails.getCopy().isEmpty();
     }
 
-    private void addAttachment(EmailDetails emailDetails, MimeMessage mimeMessage, Multipart multipart) throws MessagingException {
-        MimeBodyPart messageBodyPart = new MimeBodyPart();
-        DataSource source = new FileDataSource(emailDetails.getAttachment());
-        messageBodyPart.setDataHandler(new DataHandler(source));
-        messageBodyPart.setFileName(new DataHandler(source).getName());
-        multipart.addBodyPart(messageBodyPart);
-        mimeMessage.setContent(multipart);
+    private void addAttachment(MimeMessageHelper mimeMessageHelper, EmailDetails emailDetails)  {
+        MultipartFile multipartFile = emailDetails.getAttachment();
+        try(FileOutputStream fos= new FileOutputStream(Objects.requireNonNull(multipartFile.getOriginalFilename()))) {
+            byte[] fb = multipartFile.getBytes();
+            fos.write(fb);
+            mimeMessageHelper.addAttachment(Objects.requireNonNull(multipartFile.getOriginalFilename()), new File(multipartFile.getOriginalFilename()));
+        } catch (IOException | MessagingException e) {
+            e.printStackTrace();
+        }
     }
 
     private void getSenderDetails(EmailDetails emailDetails) {
@@ -93,16 +94,45 @@ public class EmailServiceImpl implements EmailService{
         String username;
         String password;
         if (sender.equals("aedc")||sender.equals("bedc")||sender.equals("ekedp")) {
-             username = env.getProperty(sender+"."+"mail.username");
-             password = env.getProperty(sender+"."+"mail.password");
+            username = env.getProperty(sender+"."+"mail.username");
+            password = env.getProperty(sender+"."+"mail.password");
         }else{
-             username = env.getProperty("default.mail.username");
-             password = env.getProperty("default.mail.password");
+            username = env.getProperty("default.mail.username");
+            password = env.getProperty("default.mail.password");
         }
 
         mailSender.setUsername(username);
         mailSender.setPassword(password);
 
     }
+
+    //        switch (emailDetails.getSender().toLowerCase()){
+//            case "aedc":
+//                mailSender.setUsername(env.getProperty("aedc.mail.username"));
+//                mailSender.setPassword(env.getProperty("aedc.mail.password"));
+//                break;
+//            case "bedc":
+//                mailSender.setUsername(env.getProperty("bedc.mail.username"));
+//                mailSender.setPassword(env.getProperty("bedc.mail.password"));
+//                break;
+//            case "ekedp":
+//                mailSender.setUsername("noreply@ekedp.com");
+//                mailSender.setPassword("password");
+//                break;
+//            default:
+//                mailSender.setUsername("noreply@cicod.com");
+//                mailSender.setPassword("default");
+//        }
+
+//    try (var inputStream = mpf.getInputStream()) {
+//            InputStreamReader reader = new InputStreamReader(inputStream);
+//            BufferedReader br = new BufferedReader(reader);
+//            String line = br.readLine();
+//            PrintWriter writer = new PrintWriter(new FileWriter(mpf.getOriginalFilename()));
+//            writer.println(line);
+//            writer.close();
+//        } catch (IOException exception) {
+//            exception.printStackTrace();
+//        }
 
 }
